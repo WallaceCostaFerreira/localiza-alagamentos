@@ -1,0 +1,33 @@
+[
+    {
+        "latitude":37.4219296,
+        "longitude":-122.0841003,
+        "imageMarker":"baixo",
+        "title":"Nível Baixo",
+        "description":"Poças por todos os lados."
+    },{
+        "latitude":37.423126,
+        "longitude":-122.084984,
+        "imageMarker":"medio",
+        "title":"Nível Médio",
+        "description":"Água na canela"
+    },{ 
+        "latitude":37.423126, 
+        "longitude":-122.081873,
+        "imageMarker":"alto",
+        "title":"Nível Alto",
+        "description":"Inundação."
+    },{
+        "latitude":37.420945, 
+        "longitude":-122.085564,
+        "imageMarker":"alto",
+        "title":"Nível Alto",
+        "description":"Inundação."
+    },{
+        "latitude":37.419547, 
+        "longitude":-122.083514,
+        "imageMarker":"alto",
+        "title":"Nível Alto",
+        "description":"Inundação."
+    }
+]
