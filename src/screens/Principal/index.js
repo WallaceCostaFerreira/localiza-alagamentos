@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react'
 import { Modalize } from 'react-native-modalize';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
+import axios from 'axios'
 
 import { StyleSheet, Dimensions, ActivityIndicator  } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -28,10 +29,10 @@ import {
     MyCustomCalloutView 
 } from './styles'
 
-
+import mapStyle from './mapStyle.json';
 import floodingsData from './dados.json';
 
-export default function Principal(){
+export default function Principal({navigation}){
     const [nivel, setNivel] = useState('');
     const [location, setLocation] = useState(null);
     const [errorMsg, setErrorMsg] = useState(null);
@@ -39,8 +40,8 @@ export default function Principal(){
 
     const modalizeAddFlooding = useRef(null);
 
-    openMenu = () =>{
-        console.log("openMenu");
+    const openHist = () =>{
+        navigation.navigate('Historico')
     }
 
     pushReport = async () =>{
@@ -59,6 +60,24 @@ export default function Principal(){
     }
   
     const addFlooding = () => {
+
+        let teste = [{
+            longitude:10,
+            latitude:10,
+            nivel:"alto",
+            titulo:"aquele",
+            descricao:"ela"
+        }]
+
+        console.log('addFlooding')
+
+        axios.get('http://10.0.0.108/localiza-alagamento-api/salva_alagamento.php',teste).then(response => {
+          // this.setState({ data: response.data })
+          console.log(JSON.stringify(response.data,null,2))
+        }).catch((error) => {
+          console.log('Error retrieving data'+error)
+        })
+    
         modalizeAddFlooding.current?.open();
     };
 
@@ -78,222 +97,6 @@ export default function Principal(){
         setLocation(location.coords);
       })();
     }, []);
-      
-    
-    let mapStyle = [
-        {
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#212121"
-            }
-          ]
-        },
-        {
-          "elementType": "labels.icon",
-          "stylers": [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#757575"
-            }
-          ]
-        },
-        {
-          "elementType": "labels.text.stroke",
-          "stylers": [
-            {
-              "color": "#212121"
-            }
-          ]
-        },
-        {
-          "featureType": "administrative",
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#757575"
-            },
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          "featureType": "administrative.country",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#9e9e9e"
-            }
-          ]
-        },
-        {
-          "featureType": "administrative.land_parcel",
-          "stylers": [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          "featureType": "administrative.locality",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#bdbdbd"
-            }
-          ]
-        },
-        {
-          "featureType": "poi",
-          "stylers": [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          "featureType": "poi",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#757575"
-            }
-          ]
-        },
-        {
-          "featureType": "poi.park",
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#181818"
-            }
-          ]
-        },
-        {
-          "featureType": "poi.park",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#616161"
-            }
-          ]
-        },
-        {
-          "featureType": "poi.park",
-          "elementType": "labels.text.stroke",
-          "stylers": [
-            {
-              "color": "#1b1b1b"
-            }
-          ]
-        },
-        {
-          "featureType": "road",
-          "elementType": "geometry.fill",
-          "stylers": [
-            {
-              "color": "#2c2c2c"
-            }
-          ]
-        },
-        {
-          "featureType": "road",
-          "elementType": "labels.icon",
-          "stylers": [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          "featureType": "road",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#8a8a8a"
-            }
-          ]
-        },
-        {
-          "featureType": "road.arterial",
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#373737"
-            }
-          ]
-        },
-        {
-          "featureType": "road.highway",
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#3c3c3c"
-            }
-          ]
-        },
-        {
-          "featureType": "road.highway.controlled_access",
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#4e4e4e"
-            }
-          ]
-        },
-        {
-          "featureType": "road.local",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#616161"
-            }
-          ]
-        },
-        {
-          "featureType": "transit",
-          "stylers": [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          "featureType": "transit",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#757575"
-            }
-          ]
-        },
-        {
-          "featureType": "water",
-          "elementType": "geometry",
-          "stylers": [
-            {
-              "color": "#000000"
-            }
-          ]
-        },
-        {
-          "featureType": "water",
-          "elementType": "labels.text.fill",
-          "stylers": [
-            {
-              "color": "#3d3d3d"
-            }
-          ]
-        }
-    ]
 
     return (
         <Container>
@@ -326,9 +129,9 @@ export default function Principal(){
                 ))}
             </MapView>
             <MenuButton
-                onPress={openMenu}>
+                onPress={openHist}>
                 <Feather
-                    name={'menu'}
+                    name={'bar-chart'}
                     size={30}
                     color= {theme.colors.primary}
                 />

@@ -7,6 +7,7 @@ import theme from './src/constants/theme'
 const Stack = createStackNavigator()
 
 import Principal from './src/screens/Principal';
+import Historico from './src/screens/Historico';
 
 export default function App() {
   return (
@@ -23,6 +24,11 @@ export default function App() {
         <Stack.Screen 
           name="Principal"
           component={Principal}
+          options={{ headerShown:false, }}
+        />
+        <Stack.Screen 
+          name="Historico"
+          component={Historico}
           options={{ headerShown:false, }}
         />
       </Stack.Navigator>
