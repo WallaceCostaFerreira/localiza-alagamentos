@@ -12,11 +12,19 @@ import {
     Title,
     Header
 } from './styles'
+import { FlatList } from 'react-native-gesture-handler';
 
 export default function Historico({navigation}){
 
     const goBack = () =>{
         navigation.goBack();
+    }
+
+    const renderItem = () => {
+
+        return (
+            <Header></Header>
+        )
     }
 
     return (
@@ -33,6 +41,11 @@ export default function Historico({navigation}){
                 <Title>Dados estatísticos</Title>
                 <BackButton></BackButton>
             </Header>
+            <Body>
+                <FlatList
+                    renderItem={renderItem}
+                />
+            </Body>
         </Container>
     )
 }
