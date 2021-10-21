@@ -12,6 +12,8 @@ import imgBaixo from '../../assets/images/baixo.png';
 import imgMedio from '../../assets/images/medio.png';
 import imgAlto from '../../assets/images/alto.png';
 
+import api from './api';
+
 import testImage from '../../../assets/mipmap-hdpi/ic_alto.png';
 
 import {
@@ -61,18 +63,18 @@ export default function Principal({navigation}){
   
     const addFlooding = () => {
 
-        let teste = [{
-            longitude:10,
-            latitude:10,
-            nivel:"alto",
-            titulo:"aquele",
-            descricao:"ela"
-        }]
+        // let teste = [{
+        //     longitude:10,
+        //     latitude:10,
+        //     nivel:"alto",
+        //     titulo:"aquele",
+        //     descricao:"ela"
+        // }]
 
         console.log('addFlooding')
-
-        axios.get('http://10.0.0.108/localiza-alagamento-api/salva_alagamento.php',teste).then(response => {
+        api.get('/consulta_dados.php').then(response => {
           // this.setState({ data: response.data })
+        //   console.log('akii');
           console.log(JSON.stringify(response.data,null,2))
         }).catch((error) => {
           console.log('Error retrieving data'+error)
