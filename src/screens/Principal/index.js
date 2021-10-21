@@ -4,7 +4,7 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import axios from 'axios'
 
-import { StyleSheet, Dimensions, ActivityIndicator  } from 'react-native';
+import { StyleSheet, Dimensions, ActivityIndicator, ToastAndroid  } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import theme from '../../constants/theme'
 
@@ -32,59 +32,105 @@ import {
 } from './styles'
 
 import mapStyle from './mapStyle.json';
-import floodingsData from './dados.json';
+import { render } from 'react-dom';
 
 export default function Principal({navigation}){
     const [nivel, setNivel] = useState('');
     const [location, setLocation] = useState(null);
     const [errorMsg, setErrorMsg] = useState(null);
     const [loading, setLoading] = useState(false);
-
     const modalizeAddFlooding = useRef(null);
 
+    let dadosRecuperados = [];
+
+    api.get('/consulta_dados.php').then(response => {
+        response.data.map(function(dado){
+            dadosRecuperados.push(dado);
+        })
+    }).catch((error) => {
+        console.log('Erro ao pegar dados! '+error)
+    })
+
+    
+
     const openHist = () =>{
-        navigation.navigate('Historico')
+        dadosRecuperados.map(function(dados){
+            console.log(dados.latitude);
+        });
+        // navigation.navigate('Historico')
     }
 
     pushReport = async () =>{
       setLoading(true);
 
       let location = await Location.getCurrentPositionAsync({});
-
-      // location.coords.latitude
-      // location.coords.longitude
-      // location.timestamp
-      // nivel
-
-      console.log("pushReport -> "+nivel);
+      
       setLoading(false);
       modalizeAddFlooding.current?.close();
     }
   
     const addFlooding = () => {
-
-        // let teste = [{
-        //     longitude:10,
-        //     latitude:10,
-        //     nivel:"alto",
-        //     titulo:"aquele",
-        //     descricao:"ela"
-        // }]
-
-        console.log('addFlooding')
-        api.get('/consulta_dados.php').then(response => {
-          // this.setState({ data: response.data })
-        //   console.log('akii');
-          console.log(JSON.stringify(response.data,null,2))
-        }).catch((error) => {
-          console.log('Error retrieving data'+error)
-        })
-    
         modalizeAddFlooding.current?.open();
     };
 
+    const enviaDados = () => {
+
+        let dados = {
+            longitude: location.latitude,
+            latitude: location.longitude,
+            nivel: nivel,
+            titulo: "",
+            descricao: ""
+        };
+
+        api.get(`/salva_alagamento.php?titulo=${dados.titulo}&descricao=${dados.descricao}&nivel=${dados.nivel}&longitude=${dados.longitude}&latitude=${dados.latitude}`).then(response => {
+            if(response.status >= 200 && response.status <= 300){
+                ToastAndroid.show("Reporte enviado com sucesso!",ToastAndroid.SHORT);
+                modalizeAddFlooding.current?.close();
+            }else{
+                ToastAndroid.show("Tente novamente mais tarde!",ToastAndroid.SHORT);
+                modalizeAddFlooding.current?.close();
+            }
+        }).catch((error) => {
+            console.log('Error retrieving data'+error)
+        })
+    }
+
     const handleNivel = (nivelName) =>{
         setNivel(nivelName);
+    }
+
+    const geraMarcadores = () =>{
+        console.log("TESTE geraMarcadores ",dados.latitude);
+        return(
+            dadosRecuperados.map(function(dados, index){
+                <Marker
+                    key={index}
+                    coordinate={{
+                        latitude: dados.latitude != null ? parseFloat(dados.latitude) : 37.4219296,
+                        longitude: dados.longitude != null ? parseFloat(dados.longitude) : -122.0841003,
+                    }}
+                    image={dados.nivel == 'alto' 
+                        ? require(`../../assets/images/marker_alto_alterado.png`)
+                        : dados.nivel == 'medio' 
+                        ? require(`../../assets/images/marker_medio_alterado.png`)
+                        : require(`../../assets/images/marker_baixo_alterado.png`)}
+                    
+                    title={dados.nivel == 'alto' 
+                        ? 'Nível Alto'
+                        : dados.nivel == 'medio' 
+                        ? 'Nível Médio'
+                        : 'Nível Baixo'}
+                    
+                    description={dados.nivel == 'alto' 
+                        ? 'Inundação'
+                        : dados.nivel == 'medio' 
+                        ? 'Água na canela'
+                        : 'Poças por todos os lados'}
+                >
+                </Marker>
+            })
+        );
     }
 
     useEffect(() => {
@@ -112,23 +158,9 @@ export default function Principal({navigation}){
                 }}
                 customMapStyle={mapStyle}>
                   
-                {floodingsData && floodingsData.map((floodingData, index) =>(
-                  <Marker
-                      key={index}
-                      coordinate={{
-                        latitude: floodingData.latitude != null ? floodingData.latitude : 37.4219296,
-                        longitude: floodingData.longitude != null ? floodingData.longitude : -122.0841003,
-                      }}
-                      image={floodingData.imageMarker == 'alto' 
-                        ? require(`../../assets/images/marker_alto_alterado.png`)
-                        : floodingData.imageMarker == 'medio' 
-                        ? require(`../../assets/images/marker_medio_alterado.png`)
-                        : require(`../../assets/images/marker_baixo_alterado.png`)}
-                      title={floodingData.title}
-                      description={floodingData.description}
-                  >
-                  </Marker>
-                ))}
+                {console.log("TESTE FORA ",dadosRecuperados)}
+
+                {geraMarcadores}
             </MapView>
             <MenuButton
                 onPress={openHist}>
@@ -181,7 +213,7 @@ export default function Principal({navigation}){
                     <ButtonReport onPress={pushReport}>
                         {loading 
                         ? <ActivityIndicator size="small" color={theme.colors.white} />
-                        : <TextButtonReport>Reportar</TextButtonReport>}
+                        : <TextButtonReport onPress={ enviaDados }>Reportar</TextButtonReport>}
                     </ButtonReport>
                 </Row>
             </Modalize>

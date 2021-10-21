@@ -41,11 +41,11 @@ export default function Historico({navigation}){
                 <Title>Dados estatísticos</Title>
                 <BackButton></BackButton>
             </Header>
-            <Body>
+            {/* <Body>
                 <FlatList
                     renderItem={renderItem}
                 />
-            </Body>
+            </Body> */}
         </Container>
     )
 }
