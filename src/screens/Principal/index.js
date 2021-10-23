@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { Component } from 'react'
 import { Modalize } from 'react-native-modalize';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -32,53 +32,83 @@ import {
 } from './styles'
 
 import mapStyle from './mapStyle.json';
-import { render } from 'react-dom';
 
-export default function Principal({navigation}){
-    const [nivel, setNivel] = useState('');
-    const [location, setLocation] = useState(null);
-    const [errorMsg, setErrorMsg] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const modalizeAddFlooding = useRef(null);
+export default class Principal extends Component{
+    constructor(props){
+        super(props);
+        this.state = { 
+            nivel: '',
+            location: null,
+            errorMsg: '',
+            loading: false,
+            dadosApi: []
+        }
+    }
 
-    let dadosRecuperados = [];
+    modalizeAddFlooding = React.createRef();
 
-    api.get('/consulta_dados.php').then(response => {
-        response.data.map(function(dado){
-            dadosRecuperados.push(dado);
+    // Roda antes de montar a tela
+    componentDidMount = async () =>{
+        await this.pegaReportesAPI();
+        await this.pegaLocalizacaoAtual();
+    }
+
+    // Utiliza o GPS para pegar localização atual
+    pegaLocalizacaoAtual = async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+            this.setState({errorMsg: "Permissão de acesso a localização negada!"});
+          return;
+        }
+  
+        let location = await Location.getCurrentPositionAsync({});
+        this.setState({location: location.coords});
+    }
+
+    // Pega dados de reporte da API 
+    pegaReportesAPI = async () => {
+        api.get('/consulta_dados.php').then(response => {
+            
+            this.setState({ dadosApi: response.data })
+
+        }).catch((error) => {
+            console.log('Erro ao pegar dados! '+error)
         })
-    }).catch((error) => {
-        console.log('Erro ao pegar dados! '+error)
-    })
-
+    }
     
-
-    const openHist = () =>{
-        dadosRecuperados.map(function(dados){
-            console.log(dados.latitude);
+    // Vai para a tela de estatísticas
+    openHist = () =>{
+        this.state.dadosApi.map((dados) => {
+            dados.latitude = parseFloat(dados.latitude);
+            dados.longitude = parseFloat(dados.longitude);
+            console.log(dados);
         });
         // navigation.navigate('Historico')
     }
 
-    pushReport = async () =>{
-      setLoading(true);
 
-      let location = await Location.getCurrentPositionAsync({});
-      
-      setLoading(false);
-      modalizeAddFlooding.current?.close();
+    pushReport = async () =>{
+        this.setState({loading: true});
+
+        let location = await Location.getCurrentPositionAsync({});
+        
+        this.setState({loading: false});
+        
+        this.modalizeAddFlooding.current?.close();
     }
   
-    const addFlooding = () => {
-        modalizeAddFlooding.current?.open();
+    // Abre modal de reporte de alagamento
+    addFlooding = () => {
+        this.modalizeAddFlooding.current?.open();
     };
 
-    const enviaDados = () => {
+    // Salva dados do reporte na API
+    enviaDados = () => {
 
         let dados = {
-            longitude: location.latitude,
-            latitude: location.longitude,
-            nivel: nivel,
+            longitude: this.state.location.latitude,
+            latitude: this.state.location.longitude,
+            nivel: this.state.nivel,
             titulo: "",
             descricao: ""
         };
@@ -86,140 +116,130 @@ export default function Principal({navigation}){
         api.get(`/salva_alagamento.php?titulo=${dados.titulo}&descricao=${dados.descricao}&nivel=${dados.nivel}&longitude=${dados.longitude}&latitude=${dados.latitude}`).then(response => {
             if(response.status >= 200 && response.status <= 300){
                 ToastAndroid.show("Reporte enviado com sucesso!",ToastAndroid.SHORT);
-                modalizeAddFlooding.current?.close();
+                this.modalizeAddFlooding.current?.close();
             }else{
                 ToastAndroid.show("Tente novamente mais tarde!",ToastAndroid.SHORT);
-                modalizeAddFlooding.current?.close();
+                this.modalizeAddFlooding.current?.close();
             }
         }).catch((error) => {
-            console.log('Error retrieving data'+error)
+            console.log('Error ao salvar dados na API'+error)
         })
     }
 
-    const handleNivel = (nivelName) =>{
-        setNivel(nivelName);
+    // Seleciona o nível da água para reporte
+    handleNivel = (nivelName) =>{
+        this.setState({nivel: nivelName})
     }
 
-    const geraMarcadores = () =>{
-        console.log("TESTE geraMarcadores ",dados.latitude);
-        return(
-            dadosRecuperados.map(function(dados, index){
-                <Marker
-                    key={index}
-                    coordinate={{
-                        latitude: dados.latitude != null ? parseFloat(dados.latitude) : 37.4219296,
-                        longitude: dados.longitude != null ? parseFloat(dados.longitude) : -122.0841003,
+    render(){
+        return (
+            <Container>
+                {this.state.location != null ? 
+                    <MapView 
+                        style={styles.map}
+                        region={{
+                            latitude: this.state.location != undefined ? this.state.location.latitude : 37.4219296,
+                            longitude: this.state.location != undefined ? this.state.location.longitude : -122.0841003,
+                            latitudeDelta: 0.015,
+                            longitudeDelta: 0.0121
+                        }}
+                        customMapStyle={mapStyle}>
+                        {this.state.dadosApi.map((dados, index) => {
+                            
+                            dados.latitude = parseFloat(dados.latitude);
+                            dados.longitude = parseFloat(dados.longitude);
+                            console.log("DENTRO LA ",dados);
+                            (
+                            
+                            <Marker
+                                key={index}
+                                coordinate={{
+                                    latitude: dados.latitude,
+                                    longitude: dados.longitude,
+                                }}
+                                image={dados.nivel == 'alto' 
+                                    ? require(`../../assets/images/marker_alto_alterado.png`)
+                                    : dados.nivel == 'medio' 
+                                    ? require(`../../assets/images/marker_medio_alterado.png`)
+                                    : require(`../../assets/images/marker_baixo_alterado.png`)}
+                                
+                                title={dados.nivel == 'alto' 
+                                    ? 'Nível Alto'
+                                    : dados.nivel == 'medio' 
+                                    ? 'Nível Médio'
+                                    : 'Nível Baixo'}
+                                
+                                description={dados.nivel == 'alto' 
+                                    ? 'Inundação'
+                                    : dados.nivel == 'medio' 
+                                    ? 'Água na canela'
+                                    : 'Poças por todos os lados'
+                                }
+                            />
+                        )})}
+                    </MapView>
+                    :
+                    <ActivityIndicator style={{top:'50%'}}size="large" color={theme.colors.primary}/>
+                }
+                <MenuButton
+                    onPress={this.openHist}>
+                    <Feather
+                        name={'bar-chart'}
+                        size={30}
+                        color= {theme.colors.primary}
+                    />
+                </MenuButton>
+                <AddButton
+                    onPress={this.addFlooding}>
+                    <Feather
+                        name={'plus'}
+                        size={30}
+                        color= {theme.colors.white}
+                    />
+                </AddButton>
+
+                <Modalize
+                    ref={this.modalizeAddFlooding}
+                    scrollViewProps={{ showsVerticalScrollIndicator: false }}
+                    snapPoint={270}
+                    modalHeight={270}
+                    handleStyle={{
+                        backgroundColor:theme.colors.primaryDark,
+                        marginTop:20
                     }}
-                    image={dados.nivel == 'alto' 
-                        ? require(`../../assets/images/marker_alto_alterado.png`)
-                        : dados.nivel == 'medio' 
-                        ? require(`../../assets/images/marker_medio_alterado.png`)
-                        : require(`../../assets/images/marker_baixo_alterado.png`)}
-                    
-                    title={dados.nivel == 'alto' 
-                        ? 'Nível Alto'
-                        : dados.nivel == 'medio' 
-                        ? 'Nível Médio'
-                        : 'Nível Baixo'}
-                    
-                    description={dados.nivel == 'alto' 
-                        ? 'Inundação'
-                        : dados.nivel == 'medio' 
-                        ? 'Água na canela'
-                        : 'Poças por todos os lados'}
                 >
-                </Marker>
-            })
-        );
+                    <TitleText>Relatar alagamento</TitleText>
+                    <SubtitleText>Nivel da Água</SubtitleText>
+
+                    <Row>
+                        <Col onPress={ () => this.handleNivel('baixo')}>
+                            <ImageLevel source={imgBaixo}
+                            style={ [this.state.nivel == 'baixo' && styles.selected]} />
+                            <MinimalText>Baixo</MinimalText>
+                        </Col>
+                        <Col onPress={ () => this.handleNivel('medio')}>
+                            <ImageLevel source={imgMedio}
+                            style={ [this.state.nivel == 'medio' && styles.selected] }/>
+                            <MinimalText>Médio</MinimalText>
+                        </Col>
+                        <Col onPress={ () =>  this.handleNivel('alto')}>
+                            <ImageLevel source={imgAlto}
+                            style={ [this.state.nivel == 'alto' && styles.selected] }/>
+                            <MinimalText>Alto</MinimalText>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <ButtonReport onPress={this.pushReport}>
+                            {this.state.loading 
+                            ? <ActivityIndicator size="small" color={theme.colors.white} />
+                            : <TextButtonReport onPress={ this.enviaDados }>Reportar</TextButtonReport>}
+                        </ButtonReport>
+                    </Row>
+                </Modalize>
+
+            </Container>
+        )
     }
-
-    useEffect(() => {
-      (async () => {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Permission to access location was denied');
-          return;
-        }
-  
-        let location = await Location.getCurrentPositionAsync({});
-        setLocation(location.coords);
-      })();
-    }, []);
-
-    return (
-        <Container>
-            <MapView 
-                style={styles.map}
-                region={{
-                    latitude: location != null ? location.latitude : 37.4219296,
-                    longitude: location != null ? location.longitude : -122.0841003,
-                    latitudeDelta: 0.015,
-                    longitudeDelta: 0.0121
-                }}
-                customMapStyle={mapStyle}>
-                  
-                {console.log("TESTE FORA ",dadosRecuperados)}
-
-                {geraMarcadores}
-            </MapView>
-            <MenuButton
-                onPress={openHist}>
-                <Feather
-                    name={'bar-chart'}
-                    size={30}
-                    color= {theme.colors.primary}
-                />
-            </MenuButton>
-            <AddButton
-                onPress={addFlooding}>
-                <Feather
-                    name={'plus'}
-                    size={30}
-                    color= {theme.colors.white}
-                />
-            </AddButton>
-
-            <Modalize
-                ref={modalizeAddFlooding}
-                scrollViewProps={{ showsVerticalScrollIndicator: false }}
-                snapPoint={270}
-                modalHeight={270}
-                handleStyle={{
-                    backgroundColor:theme.colors.primaryDark,
-                    marginTop:20
-                }}
-            >
-                <TitleText>Relatar alagamento</TitleText>
-                <SubtitleText>Nivel da Água</SubtitleText>
-
-                <Row>
-                    <Col onPress={ () => handleNivel('baixo')}>
-                        <ImageLevel source={imgBaixo}
-                        style={ [nivel == 'baixo' && styles.selected]} />
-                        <MinimalText>Baixo</MinimalText>
-                    </Col>
-                    <Col onPress={ () => handleNivel('medio')}>
-                        <ImageLevel source={imgMedio}
-                        style={ [nivel == 'medio' && styles.selected] }/>
-                        <MinimalText>Médio</MinimalText>
-                    </Col>
-                    <Col onPress={ () =>  handleNivel('alto')}>
-                        <ImageLevel source={imgAlto}
-                        style={ [nivel == 'alto' && styles.selected] }/>
-                        <MinimalText>Alto</MinimalText>
-                    </Col>
-                </Row>
-                <Row>
-                    <ButtonReport onPress={pushReport}>
-                        {loading 
-                        ? <ActivityIndicator size="small" color={theme.colors.white} />
-                        : <TextButtonReport onPress={ enviaDados }>Reportar</TextButtonReport>}
-                    </ButtonReport>
-                </Row>
-            </Modalize>
-
-        </Container>
-    )
 }
 
 const styles = StyleSheet.create({
