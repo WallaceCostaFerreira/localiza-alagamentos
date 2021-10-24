@@ -148,8 +148,8 @@ export default class Principal extends Component{
                             <Marker
                                 key={index}
                                 coordinate={{
-                                    latitude: dados.latitude != null ? parseFloat(dados.latitude) : 0,
-                                    longitude:dados.longitude != null ?  parseFloat(dados.longitude) : 0,
+                                    latitude: dados.latitude != null ? parseFloat(dados.latitude) : -122.0841637,
+                                    longitude:dados.longitude != null ?  parseFloat(dados.longitude) : 37.4218201,
                                 }}
                                 image={dados.nivel == 'alto' 
                                     ? require(`../../assets/images/marker_alto_alterado.png`)
