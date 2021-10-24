@@ -106,8 +106,8 @@ export default class Principal extends Component{
     enviaDados = () => {
 
         let dados = {
-            longitude: this.state.location.latitude,
-            latitude: this.state.location.longitude,
+            longitude: this.state.location.longitude,
+            latitude: this.state.location.latitude,
             nivel: this.state.nivel,
             titulo: "",
             descricao: ""
@@ -144,18 +144,12 @@ export default class Principal extends Component{
                             longitudeDelta: 0.0121
                         }}
                         customMapStyle={mapStyle}>
-                        {this.state.dadosApi.map((dados, index) => {
-                            
-                            dados.latitude = parseFloat(dados.latitude);
-                            dados.longitude = parseFloat(dados.longitude);
-                            console.log("DENTRO LA ",dados);
-                            (
-                            
+                        {this.state.dadosApi.map((dados, index) => (
                             <Marker
                                 key={index}
                                 coordinate={{
-                                    latitude: dados.latitude,
-                                    longitude: dados.longitude,
+                                    latitude: dados.latitude != null ? parseFloat(dados.latitude) : 0,
+                                    longitude:dados.longitude != null ?  parseFloat(dados.longitude) : 0,
                                 }}
                                 image={dados.nivel == 'alto' 
                                     ? require(`../../assets/images/marker_alto_alterado.png`)
@@ -176,10 +170,10 @@ export default class Principal extends Component{
                                     : 'Poças por todos os lados'
                                 }
                             />
-                        )})}
+                        ))}
                     </MapView>
                     :
-                    <ActivityIndicator style={{top:'50%'}}size="large" color={theme.colors.primary}/>
+                    <ActivityIndicator style={{top:'45%'}}size="large" color={theme.colors.primary}/>
                 }
                 <MenuButton
                     onPress={this.openHist}>
