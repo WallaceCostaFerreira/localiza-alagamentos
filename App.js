@@ -8,6 +8,9 @@ const Stack = createStackNavigator()
 
 import Principal from './src/screens/Principal';
 import Historico from './src/screens/Historico';
+import StatisticHistorico from './src/screens/ScreamHistorico/StatisticHistorico';
+
+
 
 export default function App() {
   return (
@@ -27,8 +30,8 @@ export default function App() {
           options={{ headerShown:false, }}
         />
         <Stack.Screen 
-          name="Historico"
-          component={Historico}
+          name="ScreamHistorico"
+          component={StatisticHistorico}
           options={{ headerShown:false, }}
         />
       </Stack.Navigator>
