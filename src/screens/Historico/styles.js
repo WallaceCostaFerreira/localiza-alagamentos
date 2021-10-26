@@ -25,5 +25,20 @@ export const Title = styled.Text`
     font-size: 16px;
 `;
 
+export const Col = styled.View`
+    justify-content: center;
+    align-items: center;
+`;
+
+export const Row = styled.View`
+    flex-direction: row;
+    justify-content: space-around;
+`;
+
+export const DescText = styled.Text`
+    font-size: 18px;
+    color:${theme.colors.text};
+    margin-top: 3px;
+`;
 
 

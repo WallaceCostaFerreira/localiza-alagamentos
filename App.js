@@ -29,7 +29,11 @@ export default function App() {
         <Stack.Screen 
           name="Historico"
           component={Historico}
-          options={{ headerShown:false, }}
+          options={{ 
+            headerShown:true,
+            title:"Dados Estatísticos",
+            headerTintColor: theme.colors.primaryDark
+          }}
         />
       </Stack.Navigator>
     </NavigationContainer>

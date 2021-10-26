@@ -78,12 +78,7 @@ export default class Principal extends Component{
     
     // Vai para a tela de estatísticas
     openHist = () =>{
-        this.state.dadosApi.map((dados) => {
-            dados.latitude = parseFloat(dados.latitude);
-            dados.longitude = parseFloat(dados.longitude);
-            console.log(dados);
-        });
-        // navigation.navigate('Historico')
+        this.props.navigation.navigate('Historico')
     }
 
 
