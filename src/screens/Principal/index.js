@@ -14,8 +14,6 @@ import imgAlto from '../../assets/images/alto.png';
 
 import api from './api';
 
-import testImage from '../../../assets/mipmap-hdpi/ic_alto.png';
-
 import {
     Container,
     MenuButton,
@@ -52,7 +50,6 @@ export default class Principal extends Component{
         await this.pegaReportesAPI();
         await this.pegaLocalizacaoAtual();
     }
-
     // Utiliza o GPS para pegar localização atual
     pegaLocalizacaoAtual = async () => {
         let { status } = await Location.requestForegroundPermissionsAsync();
@@ -111,6 +108,8 @@ export default class Principal extends Component{
         api.get(`/salva_alagamento.php?titulo=${dados.titulo}&descricao=${dados.descricao}&nivel=${dados.nivel}&longitude=${dados.longitude}&latitude=${dados.latitude}`).then(response => {
             if(response.status >= 200 && response.status <= 300){
                 ToastAndroid.show("Reporte enviado com sucesso!",ToastAndroid.SHORT);
+                this.props.navigation.navigate('Principal')
+                this.pegaReportesAPI();
                 this.modalizeAddFlooding.current?.close();
             }else{
                 ToastAndroid.show("Tente novamente mais tarde!",ToastAndroid.SHORT);
